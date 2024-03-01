@@ -1,0 +1,28 @@
+.slogan {
+    color: lightgrey;
+    font-weight: normal;
+}
+
+thead th {
+    background-color: lightgray;
+}
+
+tbody th {
+    background-color: lightblue;
+}
+
+.complete {
+    background-color: lightgreen;
+}
+
+.non-complete {
+    background-color: pink;
+}
+
+table th {
+    padding: 10px;
+}
+
+table {
+    margin: 20px;
+}
