@@ -1,6 +1,8 @@
-from flask import Flask, render_template, redirect, request, abort
+from flask import Flask, render_template, redirect, request
+from flask import make_response, jsonify, abort
 
 from data import db_session
+from data import jobs_api
 from data.users import User
 from data.jobs import Jobs
 
@@ -17,6 +19,16 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 
+@app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'error': 'Not found'}), 404)
+
+
+@app.errorhandler(400)
+def bad_request(_):
+    return make_response(jsonify({'error': 'Bad Request'}), 400)
+
+
 @login_manager.user_loader
 def load_user(user_id):
     db_sess = db_session.create_session()
@@ -25,6 +37,7 @@ def load_user(user_id):
 
 def main():
     db_session.global_init("db/mars_explorer.db")
+    app.register_blueprint(jobs_api.blueprint)
     app.run('127.0.0.1', port=800)
 
 @app.route("/")
