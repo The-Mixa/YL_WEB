@@ -3,6 +3,7 @@ from flask import make_response, jsonify, abort
 
 from data import db_session
 from data import jobs_api
+
 from data.users import User
 from data.jobs import Jobs
 
