@@ -7,6 +7,7 @@ from data import jobs_api
 from data.users import User
 from data.jobs import Jobs
 from data.departaments import Departments
+from data.category import Category
 
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 
@@ -14,6 +15,7 @@ from forms.login import LoginForm
 from forms.user import RegisterForm
 from forms.jobs import JobsForm
 from forms.departments import DepartmentsForm
+from forms.category import CategoryForm
 
 
 app = Flask(__name__)
@@ -55,7 +57,7 @@ def index():
     for job in jobs:
         team_leader = db.query(User).filter(User.id == job.team_leader).first()
         data.append((job.job, f'{team_leader.surname} {team_leader.name}',
-                    job.work_size, job.collaborators, job.is_finished))
+                    job.work_size, job.collaborators, ', '.join([i.name for i in job.categories]), job.is_finished))
         ides.append(job.id)
         users.append(job.user)
 
@@ -105,8 +107,8 @@ def edit_dep(id):
     if request.method == "GET":
         db_sess = db_session.create_session()
         dep = db_sess.query(Departments).filter(Departments.id == id,
-                                                 Departments.user == current_user
-                                                 ).first()
+                                                Departments.user == current_user
+                                                ).first()
         if dep:
             form.title.data = dep.title
             form.chief.data = dep.chief
@@ -117,8 +119,8 @@ def edit_dep(id):
     if form.validate_on_submit():
         db = db_session.create_session()
         dep = db.query(Departments).filter(Departments.id == id,
-                                            Departments.user == current_user
-                                            ).first()
+                                           Departments.user == current_user
+                                           ).first()
         if dep:
             dep.title = form.title.data
             dep.chief = form.chief.data
@@ -138,8 +140,8 @@ def edit_dep(id):
 def dep_delete(id):
     db_sess = db_session.create_session()
     dep = db_sess.query(Departments).filter(Departments.id == id,
-                                             Departments.user == current_user
-                                             ).first()
+                                            Departments.user == current_user
+                                            ).first()
     if dep:
         db_sess.delete(dep)
         db_sess.commit()
@@ -205,7 +207,7 @@ def logout():
 def add_jobs():
     form = JobsForm()
     if form.validate_on_submit():
-        db_sess = db_session.create_session()
+        db = db_session.create_session()
         job = Jobs()
         job.job = form.title.data
         job.team_leader = form.team_leader_id.data
@@ -213,8 +215,17 @@ def add_jobs():
         job.work_size = form.work_size.data
         job.collaborators = form.collaborators.data
         current_user.jobs.append(job)
-        db_sess.merge(current_user)
-        db_sess.commit()
+        db.merge(current_user)
+        db.commit()
+        job = db.query(Jobs).all()[-1]
+
+        categories = db.query(Category).filter(Category.id.in_(
+            map(int, form.categories.data.split(', ')))).all()
+        if categories:
+            job.categories = categories
+
+        db.commit()
+
         return redirect('/')
     return render_template('jobs.html', title='Добавление Работы', form=form)
 
@@ -233,6 +244,8 @@ def edit_job(id):
             form.team_leader_id.data = job.team_leader
             form.work_size.data = job.work_size
             form.collaborators.data = job.collaborators
+            form.categories.data = ', '.join(
+                [str(i.id) for i in job.categories])
             form.is_finished.data = job.is_finished
         else:
             abort(404)
@@ -247,7 +260,8 @@ def edit_job(id):
             job.work_size = form.work_size.data
             job.collaborators = form.collaborators.data
             job.is_finished = form.is_finished.data
-
+            job.categories = db.query(Category).filter(Category.id.in_(
+                map(int, form.categories.data.split(', ')))).all()
             db.commit()
             return redirect('/')
         else:
@@ -271,6 +285,19 @@ def job_delete(id):
     else:
         abort(404)
     return redirect('/')
+
+@app.route('/category', methods=['GET', 'POST'])
+@login_required
+def add_category():
+    form = CategoryForm()
+    if form.validate_on_submit():
+        db = db_session.create_session()
+        category = Category()
+        category.name = form.name.data
+        db.add(category)
+        db.commit()
+        return redirect('/')
+    return render_template('category.html', title='Добавление Категории', form=form)
 
 
 if __name__ == '__main__':
