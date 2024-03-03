@@ -3,6 +3,7 @@ from flask import make_response, jsonify, abort
 
 from data import db_session
 from data import jobs_api
+from data import users_api
 
 from data.users import User
 from data.jobs import Jobs
@@ -43,6 +44,7 @@ def load_user(user_id):
 def main():
     db_session.global_init("db/mars_explorer.db")
     app.register_blueprint(jobs_api.blueprint)
+    app.register_blueprint(users_api.blueprint)
     app.run('127.0.0.1', port=800)
 
 
