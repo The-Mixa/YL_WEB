@@ -2,6 +2,7 @@
 {% block content %}
 {% if current_user.is_authenticated %}
 <a href="/jobs" class="btn btn-secondary">Добавить работу</a>
+<a href="/departments" class="btn btn-secondary">Перейти к департаментам</a>
 {% endif %}
 {% set headers = ['Title of activity', 'Team leader', 'Duration', 'List of collaborators', 'is finished'] %}
 

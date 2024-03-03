@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+{% if current_user.is_authenticated %}
+<a href="/departments_add" class="btn btn-secondary">Добавить депертамент</a>
+<a href="/" class="btn btn-secondary">Вернуться к работам</a>
+{% endif %}
+{% set headers = ['Title of departament', 'Chief', 'Members', 'Deparment Email'] %}
+
+{% for job in data %}
+<h2>Action #{{ides[loop.index0]}}</h2>
+<table>
+
+    <thead>
+        <tr>
+            {% for title in headers %}
+            <th>{{title}}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+
+    <tbody>
+        <tr>
+            {% for item in job %}
+            <th>{{ item }}</th>
+            {% endfor %}
+        </tr>
+    </tbody>
+</table>
+{% if current_user.is_authenticated and current_user == users[loop.index0] or current_user.id == 1%}
+<div>
+    <a href="/departments/{{ ides[loop.index0] }}" class="btn btn-warning">
+        Изменить
+    </a>
+    <a href="/department_delete/{{ ides[loop.index0] }}" class="btn btn-danger">
+        Удалить
+    </a>
+</div>
+{% endif %}
+{% endfor %}
+
+{% endblock %}
