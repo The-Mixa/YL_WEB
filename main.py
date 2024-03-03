@@ -18,6 +18,9 @@ from forms.jobs import JobsForm
 from forms.departments import DepartmentsForm
 from forms.category import CategoryForm
 
+from requests import get
+from os import chdir, mkdir
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -172,7 +175,8 @@ def reqister():
             age=form.age.data,
             position=form.position.data,
             speciality=form.speciality.data,
-            address=form.address.data
+            address=form.address.data,
+            city_from=form.city_from.data
         )
         user.set_password(form.password.data)
         db_sess.add(user)
@@ -300,6 +304,43 @@ def add_category():
         db.commit()
         return redirect('/')
     return render_template('category.html', title='Добавление Категории', form=form)
+
+
+@app.route('/users_show/<int:user_id>')
+def users_show(user_id):
+    response = get(f'http://localhost:800/api/users/{user_id}').json()['user']
+    city_from = response['city_from']
+    name = f"{response['surname']} {response['name']}"
+
+    geocoder_server =  "http://geocode-maps.yandex.ru/1.x/"
+    geocoder_params = {
+    "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
+    "geocode": city_from,
+    "format": "json"}
+    response = get(geocoder_server, params=geocoder_params).json()
+
+    toponym = response["response"]["GeoObjectCollection"][
+    "featureMember"][0]["GeoObject"]
+
+    toponym_coodrinates = toponym["Point"]["pos"]
+    toponym_longitude, toponym_lattitude = toponym_coodrinates.split(" ")
+
+    map_params = {
+        "ll": ",".join([toponym_longitude, toponym_lattitude]),
+        "z": 12,
+        "l": "sat"
+    }
+    map_api_server = "http://static-maps.yandex.ru/1.x/"
+    response = get(map_api_server, params=map_params)
+    try:
+        chdir('static\\img\\')
+    except Exception:
+        pass
+    map_file = "map.png"
+    with open(map_file, "wb") as file:
+        file.write(response.content)
+
+    return render_template('user_show.html', city_from=city_from, name=name)
 
 
 if __name__ == '__main__':

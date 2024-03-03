@@ -19,7 +19,7 @@ def get_users():
             'users':
                 [item.to_dict(
                     only=('id', 'surname', 'name', 'age', 'position',
-                          'speciality', 'address', 'email')
+                          'speciality', 'address', 'email', 'city_from')
                 ) for item in users]
         }
     )
@@ -33,7 +33,7 @@ def get_one_user(user_id):
         return make_response(jsonify({'error': 'Not found'}), 404)
     return jsonify(
         {'user': user.to_dict(only=('surname', 'name', 'age', 'position',
-                                    'speciality', 'address', 'email'))}
+                                    'speciality', 'address', 'email', 'city_from'))}
     )
 
 
@@ -43,7 +43,7 @@ def create_user():
         return make_response(jsonify({'error': 'Empty request'}), 400)
     elif not all(key in request.json for key in
                  ['surname', 'name', 'age', 'position',
-                  'speciality', 'address', 'email']):
+                  'speciality', 'address', 'email', 'city_from']):
         return make_response(jsonify({'error': 'Bad request'}), 400)
     db_sess = db_session.create_session()
     user = User(
@@ -53,7 +53,8 @@ def create_user():
         position=request.json['position'],
         address=request.json['address'],
         email=request.json['email'],
-        speciality=request.json['speciality']
+        speciality=request.json['speciality'],
+        city_from=request.json['city_from']
     )
     db_sess.add(user)
     db_sess.commit()
@@ -87,7 +88,8 @@ def change_user(user_id):
     user.position=request.json['position']
     user.address=request.json['address']
     user.email=request.json['email']
-    user.speciality=request.json['speciality']
+    user.speciality=request.json['speciality'],
+    city_from = request.json['city_from']
 
     db_sess.commit()
     return jsonify({'id': user.id})
