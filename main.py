@@ -19,10 +19,14 @@ from forms.departments import DepartmentsForm
 from forms.category import CategoryForm
 
 from requests import get
-from os import chdir, mkdir
+from os import chdir
+
+from flask_restful import Api
+import resources
 
 
 app = Flask(__name__)
+api = Api(app)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -45,6 +49,10 @@ def load_user(user_id):
 
 
 def main():
+
+    api.add_resource(resources.JobsListResource, '/api/v2/jobs') 
+    api.add_resource(resources.JobResource, '/api/v2/jobs/<int:job_id>')
+
     db_session.global_init("db/mars_explorer.db")
     app.register_blueprint(jobs_api.blueprint)
     app.register_blueprint(users_api.blueprint)
